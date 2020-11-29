@@ -1,0 +1,5 @@
+linux-*/
+linux-*.tar.xz
+buildroot/
+mc-benchmark/
+gcov-data/
