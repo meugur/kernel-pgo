@@ -3,3 +3,8 @@ linux-*.tar.xz
 buildroot/
 mc-benchmark/
 gcov-data/
+mysql-*/
+mysql-*.tar.gz
+sysbench-*/
+sysbench-*.tar.gz
+

@@ -124,7 +124,12 @@ ping google.com
 Make sure that you can have dependences for the benchmark you want to run on the host.
 Specify the application that you would like to collect data for:
 ```
-./benchmark redis
+./benchmark.sh redis
+```
+For MySQL:
+```
+./benchmark.sh mysql prepare
+./benchmark.sh mysql run
 ```
 This script will shutdown the guest system on success, so make sure to restart it between runs.
 
@@ -133,7 +138,7 @@ If the issue persists, then there is a bug somewhere.
 
 If the benchmark is successful, run the following to get profile data:
 ```
-./collect-gcov redis
+./collect-gcov.sh redis
 ```
 This will mount the rootfs to the host system and copy the data from the guest to the host.
 There will be a  `gcov-data` directory with the gcov data in `.tar.gz` format.
@@ -165,3 +170,31 @@ make
 When running the benchmark script for memcached, you will need to `Ctrl+c` after the
 server starts on the guest to get the benchmark to actually run.
 
+### MySQL
+The buildroot MySQL installation is version 5.1.73. In order to use sysbench, for
+this version, install sysbench version 0.4.12. This also requires installing the
+proper MySQL version 5.1.73 libraries. For more info:
+
+https://wiki.mikejung.biz/Sysbench
+
+Install MySQL 5.1.73
+```
+wget https://dev.mysql.com/get/Downloads/MySQL-5.1/mysql-5.1.73.tar.gz
+tar xzvf mysql-5.1.73.tar.gz
+
+./install-mysql.sh
+
+cd mysql-5.1.73
+make install
+```
+Install sysbench 0.4.12
+```
+wget https://downloads.mysql.com/source/sysbench-0.4.12.16.tar.gz
+tar xzvf sysbench-0.4.12.16.tar.gz
+cd sysbench-0.4.12.16
+./autogen.sh
+./configure
+make
+```
+When running the benchmark script for mysql, you will need to `Ctrl+c` after the
+server starts on the guest to get the benchmark to actually run.

@@ -6,8 +6,10 @@ REDIS_PORT=7369
 MEMCACHED_PORT=7369
 NGINX_PORT=1080
 APACHE_PORT=1080
+MYSQL_PORT=3306
 
 MCBENCH=$(pwd)/mc-benchmark/mc-benchmark
+SYSBENCH=$(pwd)/sysbench-0.4.12.16/sysbench/sysbench
 
 echo "Starting $1 benchmark"
 
@@ -46,6 +48,45 @@ case "$1" in
     rocksdb)
         ;;
     mysql)
+        ssh root@localhost -p 2222 "/etc/init.d/S97mysqld start"
+
+        case "$2" in
+            prepare)
+                ssh root@localhost -p 2222 "mysql -u root -e \"CREATE DATABASE sysbench;\""
+                ssh root@localhost -p 2222 "mysql -u root -e \"CREATE USER 'sysbench'@'10.0.2.2' IDENTIFIED BY 'password';\""
+                ssh root@localhost -p 2222 "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO 'sysbench'@'10.0.2.2' IDENTIFIED BY 'password';\""
+                $SYSBENCH \
+                    --test=oltp \
+                    --db-driver=mysql \
+                    --oltp-table-size=10000000 \
+                    --mysql-host=127.0.0.1 \
+                    --mysql-port=$MYSQL_PORT \
+                    --mysql-db=sysbench \
+                    --mysql-user=sysbench \
+                    --mysql-password=password \
+                    prepare
+                ;;
+            run)
+                $SYSBENCH \
+                    --test=oltp \
+                    --db-driver=mysql \
+                    --oltp-table-size=10000000 \
+                    --mysql-host=127.0.0.1 \
+                    --mysql-port=$MYSQL_PORT \
+                    --mysql-db=sysbench \
+                    --mysql-user=sysbench \
+                    --mysql-password=password \
+                    --max-time=60 \
+                    --max-requests=0 \
+                    --num-threads=4 \
+                    --oltp-reconnect-mode=random \
+                    run
+                ;;
+            *)
+                echo "MySQL usage: $0 $1 {prepare|run}"
+                exit 1
+                ;;
+        esac
         ;;
     postgresql)
         ;;

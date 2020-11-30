@@ -15,5 +15,5 @@ qemu-system-x86_64 \
     -serial mon:stdio \
     -enable-kvm \
     -cpu host \
-    -nic user,hostfwd=tcp:127.0.0.1:7369-:7369,hostfwd=tcp:127.0.0.1:1080-:80,hostfwd=tcp::2222-:22
+    -nic user,hostfwd=tcp::7369-:7369,hostfwd=tcp::1080-:80,hostfwd=tcp::2222-:22,hostfwd=tcp::3306-:3306,hostfwd=tcp::5432-:5432
 
