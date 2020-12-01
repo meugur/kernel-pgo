@@ -126,10 +126,13 @@ Specify the application that you would like to collect data for:
 ```
 ./benchmark.sh redis
 ```
-For MySQL:
+For MySQL/PostgreSQL:
 ```
 ./benchmark.sh mysql prepare
 ./benchmark.sh mysql run
+
+./benchmark.sh postgresql prepare
+./benchmark.sh postgresql run
 ```
 This script will shutdown the guest system on success, so make sure to restart it between runs.
 
@@ -198,3 +201,12 @@ make
 ```
 When running the benchmark script for mysql, you will need to `Ctrl+c` after the
 server starts on the guest to get the benchmark to actually run.
+
+### PostgreSQL
+Install latest sysbench
+
+Ubuntu
+```
+apt install sysbench libpq-dev
+```
+
