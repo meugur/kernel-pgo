@@ -10,9 +10,7 @@ https://www.kernel.org/doc/html/latest/dev-tools/gcov.html
 
 https://www.man7.org/linux/man-pages/man1/gcov.1.html
 
-1. [Setup Linux kernel](#setup)
-
-# Setup Linux kernel
+# Build Linux Kernel
 ## Download
 Download a Linux kernel 5.x version. For example:
 ```
@@ -48,8 +46,11 @@ In the kernel directory:
 ```
 make -j8
 ```
-# Setup Buildroot
+# Build rootfs
 This project uses Buildroot to create a root file system with specific utilities.
+
+https://buildroot.org/downloads/manual/manual.html
+
 ## Download
 ```
 git clone git@github.com:buildroot/buildroot.git
@@ -90,7 +91,7 @@ In the buildroot directory:
 make -j8
 ```
 
-# Collecting profile data
+# Profile collection
 ## Run QEMU
 Run the emulated system from the repository root:
 ```
@@ -110,46 +111,33 @@ or
 ```
 ./run-emulator.sh
 ```
-Login to the system with username `root`, and ensure that no errors arise.
-
-### Debugging
-If there is an issue, `poweroff` the system. If you can't do that, then
+Login to the system with username `root`. The initial boot may hang. If so,
 ```
 ps aux | grep qemu
-kill -9 pid_of_qemu
-```
-Reboot the system afterwards.
-
-Also, make sure to test network availability:
-```
-ping google.com
+kill -9 {qemu_pid}
 ```
 
-## Run benchmarks
+## Benchmarks
 Make sure that you can have dependences for the benchmark you want to run on the host.
-Specify the application that you would like to collect data for:
+Then, specify the application that you would like to collect data for:
 ```
-./benchmark.sh redis
-```
-For MySQL/PostgreSQL:
-```
-./benchmark.sh mysql prepare
-./benchmark.sh mysql run
+./benchmark.sh
+Usage: ./benchmark.sh {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}
 
-./benchmark.sh postgresql prepare
-./benchmark.sh postgresql run
-```
-This script will shutdown the guest system on success, so make sure to restart it between runs.
+./benchmark.sh mysql
+MySQL usage: ./benchmark.sh mysql {prepare|run}
 
-The benchmark may fail, in which case, you should try it again.
-If the issue persists, then there is a bug somewhere.
+./benchmark.sh postgresql
+PostgreSQL usage: ./benchmark.sh postgresql {prepare|run}
+```
+The benchmark may fail, in which case, you should try it again or reboot qemu.
 
 If the benchmark is successful, run the following to get profile data:
 ```
-./collect-gcov.sh redis
+./collect-gcov.sh {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}
 ```
 This will mount the rootfs to the host system and copy the data from the guest to the host.
-There will be a  `gcov-data` directory with the gcov data in `.tar.gz` format.
+There will be a `gcov-data` directory with the gcov data in `{benchmark}-profile.tar.gz` format.
 
 ### Apache/Nginx
 Install Apache Bench
@@ -177,6 +165,40 @@ make
 ```
 When running the benchmark script for memcached, you will need to `Ctrl+c` after the
 server starts on the guest to get the benchmark to actually run.
+
+### Leveldb
+Build leveldb to get the `db_bench` tool on the emulated machine:
+```
+git clone --recurse-submodules git@github.com:google/leveldb.git
+./build-leveldb.sh
+```
+
+Re-build buildroot to transfer the binary to the guest:
+```
+cd buildroot
+make
+```
+
+### Rocksdb
+Build rocksdb to get the `db_bench` tool on the emulated machine:
+
+Get the required libraries (https://github.com/facebook/rocksdb/blob/master/INSTALL.md):
+
+Ubuntu:
+```
+apt install libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+```
+
+Build rocksdb to get the `db_bench` tool on the emulated machine:
+```
+git clone git@github.com:facebook/rocksdb.git
+./build-rocksdb.sh
+```
+Re-build buildroot to transfer the binary to the guest:
+```
+cd buildroot
+make
+```
 
 ### MySQL
 The buildroot MySQL installation is version 5.1.73. In order to use sysbench, for
@@ -212,35 +234,5 @@ Install latest sysbench
 
 Ubuntu
 ```
-sudo apt install sysbench libpq-dev
-```
-
-### Leveldb
-Build leveldb to get the `db_bench` tool on the emulated machine:
-```
-git clone --recurse-submodules git@github.com:google/leveldb.git
-./build-leveldb.sh
-
-# Re-build buildroot to get the benchmark
-cd buildroot
-make -j8
-```
-### Rocksdb
-Build rocksdb to get the `db_bench` tool on the emulated machine:
-
-Get the required libraries (https://github.com/facebook/rocksdb/blob/master/INSTALL.md):
-
-Ubuntu:
-```
-sudo apt install libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
-```
-
-Build rocksdb to get the `db_bench` tool on the emulated machine:
-```
-git clone git@github.com:facebook/rocksdb.git
-./build-rocksdb.sh
-
-# Re-build buildroot to get the benchmark
-cd buildroot
-make -j8
+apt install sysbench libpq-dev
 ```
