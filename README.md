@@ -10,6 +10,8 @@ https://www.kernel.org/doc/html/latest/dev-tools/gcov.html
 
 https://www.man7.org/linux/man-pages/man1/gcov.1.html
 
+1. [Setup Linux kernel](#setup)
+
 # Setup Linux kernel
 ## Download
 Download a Linux kernel 5.x version. For example:
@@ -65,8 +67,11 @@ Toolchain --> C library --> glibc
 Toolchain --> Install glibc utilities
 Toolchain --> Enable C++ support
 Target packages --> Show packages that are also provided by busybox
+Target packages --> Compressors and decompressors --> bzip2, zstd
+Target packages --> Libraries --> Compression and decompression --> lz4, snappy, zlib support
 Target packages --> Libraries --> Database --> leveldb, postgresql, redis, rocksdb
 Target packages --> Libraries --> Database --> mysql support, oracle mysql server
+Target packages --> Libraries --> Other --> gflags
 Target packages --> Networking applications --> apache, memcached, nginx
 Target packages --> Networking applications --> dhcp, dhcp server/client, dhcpcd
 Target packages --> Networking applications --> ifupdown scripts, net-tools, netcat
@@ -207,6 +212,35 @@ Install latest sysbench
 
 Ubuntu
 ```
-apt install sysbench libpq-dev
+sudo apt install sysbench libpq-dev
 ```
 
+### Leveldb
+Build leveldb to get the `db_bench` tool on the emulated machine:
+```
+git clone --recurse-submodules git@github.com:google/leveldb.git
+./build-leveldb.sh
+
+# Re-build buildroot to get the benchmark
+cd buildroot
+make -j8
+```
+### Rocksdb
+Build rocksdb to get the `db_bench` tool on the emulated machine:
+
+Get the required libraries (https://github.com/facebook/rocksdb/blob/master/INSTALL.md):
+
+Ubuntu:
+```
+sudo apt install libgflags-dev libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+```
+
+Build rocksdb to get the `db_bench` tool on the emulated machine:
+```
+git clone git@github.com:facebook/rocksdb.git
+./build-rocksdb.sh
+
+# Re-build buildroot to get the benchmark
+cd buildroot
+make -j8
+```

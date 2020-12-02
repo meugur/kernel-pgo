@@ -46,8 +46,12 @@ case "$1" in
         ab -n 1000000 -c 50 "http://127.0.0.1:$APACHE_PORT/"
         ;;
     leveldb)
+        ssh root@localhost -p 2222 \
+            "./db_bench_leveldb --benchmarks=fillseq,readrandom,readseq,stats --num=1000000"
         ;;
     rocksdb)
+        ssh root@localhost -p 2222 \
+            "./db_bench_rocksdb --benchmarks=fillseq,readrandom,readseq,stats --num=1000000"
         ;;
     mysql)
         ssh root@localhost -p 2222 "/etc/init.d/S97mysqld start"
