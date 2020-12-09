@@ -11,3 +11,5 @@ leveldb/
 rocksdb/
 overlay/root/db_bench_leveldb
 overlay/root/db_bench_rocksdb
+kernels/
+stats/

@@ -122,13 +122,13 @@ Make sure that you can have dependences for the benchmark you want to run on the
 Then, specify the application that you would like to collect data for:
 ```
 ./benchmark.sh
-Usage: ./benchmark.sh {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}
+Usage: ./benchmark.sh output.txt {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}
 
 ./benchmark.sh mysql
-MySQL usage: ./benchmark.sh mysql {prepare|run}
+MySQL usage: ./benchmark.sh output.txt mysql {prepare|run}
 
 ./benchmark.sh postgresql
-PostgreSQL usage: ./benchmark.sh postgresql {prepare|run}
+PostgreSQL usage: ./benchmark.sh output.txt postgresql {prepare|run}
 ```
 The benchmark may fail, in which case, you should try it again or reboot qemu.
 
