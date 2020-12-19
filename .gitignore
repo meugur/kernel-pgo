@@ -13,3 +13,5 @@ overlay/root/db_bench_leveldb
 overlay/root/db_bench_rocksdb
 kernels/
 stats/
+.DS_Store
+__pycache__/

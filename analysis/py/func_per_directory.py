@@ -9,44 +9,14 @@ from pathlib import Path
 import numpy as np
 from glob import glob
 
-
-def get_func_map_for_directory(dir_path):
-    func_map = {}
-
-    for path in Path(dir_path).rglob('*.json'):
-        with open(path) as fd:
-            json_data = json.load(fd)
-
-        for file in json_data["files"]:
-            for function in file["functions"]:
-                if function['execution_count'] > 0:
-                    if function['name'] not in func_map:
-                        func_map[function['name']] = 0
-                    func_map[function['name']] += function['execution_count']
-
-
-    return func_map
-
-
-
-def cos_sim_matrix(f):
-    norms = np.expand_dims(np.linalg.norm(f, axis=1), axis=1)
-    norm_tile = np.tile(norms,[1, f.shape[1]])
-    #print("norm_tile:")
-    #print(norm_tile)
-    #print(f)
-    #print(norm_tile)
-    f /= norm_tile
-    return f @ f.T
+from common import get_func_map_for_directory, cos_sim_matrix, benchmarks
 
 if __name__ == '__main__':
-    benchmarks = ['apache', 'leveldb', 'memcached', 'mysql', 'nginx',
-        'postgresql', 'redis', 'rocksdb']
 
-    all_dirs_list = [Path(p).parts[2] for p in glob('data/postgresql/*')]
+    all_dirs_list = [Path(p).parts[3] for p in glob('../data/postgresql/*')]
 
     for dir in all_dirs_list:
-        data = [get_func_map_for_directory(Path('data').joinpath(b, dir)) for b in benchmarks]
+        data = [get_func_map_for_directory(Path('../data').joinpath(b, dir)) for b in benchmarks]
 
         data_keys = [set(d.keys()) for d in data]
         all_keys = sorted(list(set.union(*data_keys)))
