@@ -2,6 +2,8 @@
 
 set -e
 
+NO_GCOV=1
+
 BENCHMARK=$1
 BENCH_OUTPUT=${2:-temp.txt}
 TIMEOUT=2m
@@ -128,6 +130,12 @@ service() {
     set -e
 }
 
+start_gcov() {
+    if [[ $NO_GCOV -eq 0 ]]; then
+        guest_cmd "echo 1 | tee /sys/kernel/debug/gcov/reset"
+    fi
+}
+
 setup() {
     guest_cmd "date"
     service "S50redis" "stop"
@@ -138,11 +146,13 @@ setup() {
     guest_cmd "sleep 5"
     guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
     guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
-    guest_cmd "echo 1 | tee /sys/kernel/debug/gcov/reset"
+    start_gcov
 }
 
 collect() {
-    guest_cmd "cd / && time ./gather.sh $BENCHMARK.tar.gz"
+    if [[ $NO_GCOV -eq 0 ]]; then
+        guest_cmd "cd / && time ./gather.sh $BENCHMARK.tar.gz"
+    fi
 }
 
 guest_shutdown() {
@@ -225,7 +235,7 @@ case "$BENCHMARK" in
                 guest_cmd "sleep 5"
                 guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
                 guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
-                guest_cmd "echo 1 | tee /sys/kernel/debug/gcov/reset"
+                start_gcov
                 $SYSBENCH_MYSQL ${MYSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 collect
                 guest_shutdown
@@ -272,7 +282,7 @@ case "$BENCHMARK" in
                 guest_cmd "sleep 5"
                 guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
                 guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
-                guest_cmd "echo 1 | tee /sys/kernel/debug/gcov/reset"
+                start_gcov
                 $SYSBENCH_PGSQL ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 collect
                 guest_shutdown

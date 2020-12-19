@@ -2,7 +2,7 @@
 
 set -e 
 
-KERNEL_PATH=$(pwd)/linux-5.9.6/vmlinux
+KERNEL_PATH=$(pwd)/kernels/gcov/vmlinux
 ROOT_FS_PATH=$(pwd)/buildroot/output/images/rootfs.ext4
 
 qemu-system-x86_64 \
