@@ -15,3 +15,5 @@ kernels/
 stats/
 .DS_Store
 __pycache__/
+ubuntu-*.tar.gz
+images/

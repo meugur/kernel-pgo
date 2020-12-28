@@ -47,16 +47,32 @@ In the kernel directory:
 make -j8
 ```
 # Build rootfs
-This project uses Buildroot to create a root file system with specific utilities.
+
+## Ubuntu Base
+Ubuntu Base is a minimal rootfs for use in the 
+creation of custom images for specific needs.
+
+### Download
+```
+wget https://cdimage.ubuntu.com/cdimage/ubuntu-base/releases/20.04/release/ubuntu-base-20.04.1-base-amd64.tar.gz
+```
+
+### Setup
+```
+./scripts/host/create-rootfs.sh
+```
+
+## Buildroot
+You can use Buildroot to create a root file system with specific utilities.
 
 https://buildroot.org/downloads/manual/manual.html
 
-## Download
+### Download
 ```
 git clone git@github.com:buildroot/buildroot.git
 ```
 
-## Configuration
+### Configuration
 ```
 cd buildroot
 make menuconfig
@@ -85,7 +101,7 @@ Filesystem images --> ext2/3/4 root filesystem
 Filesystem images --> ext2/3/4 root filesystem --> ext2/3/4 variant --> ext4
 Filesystem images --> exact size --> 10G # This will change based on the benchmarks
 ```
-## Compilation
+### Compilation
 In the buildroot directory:
 ```
 make -j8

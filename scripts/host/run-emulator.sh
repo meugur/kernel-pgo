@@ -3,7 +3,7 @@
 set -e 
 
 KERNEL_PATH=$(pwd)/kernels/gcov/vmlinux
-ROOT_FS_PATH=$(pwd)/buildroot/output/images/rootfs.ext4
+ROOT_FS_PATH=$(pwd)/images/ubuntu_base_20_04_1.img
 
 qemu-system-x86_64 \
     -kernel $KERNEL_PATH \
