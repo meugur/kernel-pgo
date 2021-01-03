@@ -4,17 +4,16 @@ APP=$1
 
 MOUNTDIR=/mnt/tmpgcovfs
 BASEDIR=$(pwd)
-LINUXDIR=$BASEDIR/linux-5.9.6
+LINUXDIR=$BASEDIR/linux-5.9.6-gcov
 OUTPUTDIR=$BASEDIR/gcov-data
 APPDIR=$OUTPUTDIR/$APP
 
-DISK=$BASEDIR/buildroot/output/images/rootfs.ext4
+DISK=$BASEDIR/images/ubuntu_base_20_04_1.img
 
 APPTAR=$APP.tar.gz
 FINALTAR=$APP-profile.tar.gz
 
 sudo mkdir -p $MOUNTDIR
-mkdir -p $OUTPUTDIR
 mkdir -p $APPDIR
 rm -rf $APPDIR/* # Clear application directory
 
@@ -34,22 +33,43 @@ shopt -s globstar
 cd $APPDIR
 FILES=(**/*.gcda)
 
-# Create json output for each source file
+# Create json/gcov output for each source file
 cd $LINUXDIR
 for FILE in "${FILES[@]}"; do
     FILE="${FILE%%.*}"
     FILEDIR="${FILE%/*}"
-    SOURCE="${FILE##*/}.c"
+    SOURCE="${FILE##*/}"
+
+    OUTPUTC="$SOURCE.c.gcov"
+    OUTPUTH="$SOURCE.h.gcov"
     OUTPUTGZ="$SOURCE.gcov.json.gz"
 
-    cd "$LINUXDIR/$FILEDIR"
-    gcov -b -i -o $APPDIR/$FILEDIR $SOURCE > /dev/null
+    # Create the .gcov file
+    gcov -a -b -f -m -p -o $APPDIR/$FILEDIR $SOURCE > /dev/null
+
+    # Create and unzip the json summary
+    gcov -a -b -i -o $APPDIR/$FILEDIR $SOURCE > /dev/null
     mv $OUTPUTGZ $APPDIR/$FILEDIR
     cd $APPDIR/$FILEDIR
     gunzip $OUTPUTGZ
+
     cd $LINUXDIR
 done
 
+cd $LINUXDIR
+GCOV_FILES=(*.gcov)
+
+# Move all .gcov files to their respective directories
+for FILE in "${GCOV_FILES[@]}"; do
+    FILE_N="${FILE//\#//}"
+    FILEDIR="${FILE_N%/*}"
+    SOURCE="${FILE_N##*/}"
+    
+    mkdir -p $APPDIR/$FILEDIR
+    mv $FILE $APPDIR/$FILE_N 
+done
+
+
 cd $OUTPUTDIR
-tar -cvf $FINALTAR $APP
+tar --exclude="*.gcno" --exclude="*.gcda" -cvf $FINALTAR $APP
 

@@ -2,7 +2,7 @@
 
 set -e
 
-NO_GCOV=1
+NO_GCOV=0
 
 BENCHMARK=$1
 BENCH_OUTPUT=${2:-temp.txt}
@@ -138,12 +138,6 @@ start_gcov() {
 
 setup() {
     guest_cmd "date"
-    service "S50redis" "stop"
-    service "S50nginx" "stop"
-    service "S50apache" "stop"
-    service "S50postgresql" "stop"
-    service "S97mysqld" "stop"
-    guest_cmd "sleep 5"
     guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
     guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
     start_gcov
@@ -151,7 +145,7 @@ setup() {
 
 collect() {
     if [[ $NO_GCOV -eq 0 ]]; then
-        guest_cmd "cd / && time ./gather.sh $BENCHMARK.tar.gz"
+        guest_cmd "cd / && time ./root/gather.sh $BENCHMARK.tar.gz"
     fi
 }
 
