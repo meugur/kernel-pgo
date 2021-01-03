@@ -18,4 +18,12 @@ DEBIAN_FRONTEND=noninteractive \
     mysql-server \
     postgresql postgresql-contrib \
     nginx \
-    apache2
+    apache2 \
+    cmake \
+    build-essential \
+    libgflags-dev \
+    libsnappy-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    liblz4-dev \
+    libzstd-dev

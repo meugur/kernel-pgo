@@ -13,3 +13,10 @@ echo "dhclient" >> /etc/rc.local
 echo "exit 0" >> /etc/rc.local
 chmod 755 /etc/rc.local
 systemctl enable rc-local
+
+systemctl disable nginx.service
+systemctl disable apache2.service
+systemctl disable redis-server.service
+systemctl disable mysql.service
+systemctl disable postgresql.service
+systemctl disable memcached.service
