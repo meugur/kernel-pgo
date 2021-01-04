@@ -37,6 +37,9 @@ sudo chroot $MOUNT /bin/bash -c "
 
 exit
 "
+# Configurations
+sudo cp $BASEDIR/overlay/etc/redis.conf $MOUNT/etc/redis
+sudo cp $BASEDIR/overlay/etc/nginx.conf $MOUNT/etc/nginx
 
 sudo umount $MOUNT/proc
 sudo umount $MOUNT/sys

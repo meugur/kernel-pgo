@@ -23,16 +23,16 @@ PGSQL_PORT=5432
 REDIS_BENCH_FLAGS=(
     '-h 127.0.0.1'
     "-p $REDIS_PORT"
-    '-n 200000'
-    '-c 20'
-    '-l'
+    '-n 150000'
+    '-c 15'
+    '-d 15'
 )
 MC_BENCH_FLAGS=(
     '-h 127.0.0.1'
     "-p $MEMCACHED_PORT"
-    '-n 200000'
-    '-c 20'
-    '-l'
+    '-n 1700000'
+    '-c 15'
+    '-d 15'
 )
 NGINX_BENCH_FLAGS=(
     '-t 120'
@@ -156,33 +156,30 @@ guest_shutdown() {
 case "$BENCHMARK" in
     redis)
         setup
-        guest_cmd "redis-server --port $REDIS_PORT --protected-mode no &"
-        set +e
-        timeout $TIMEOUT redis-benchmark ${REDIS_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
-        set -e
+        guest_cmd "sysctl -w fs.file-max=100000"
+        guest_cmd "redis-server --maxclients 100000 --port $REDIS_PORT --protected-mode no &"
+        time redis-benchmark ${REDIS_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
         collect
         guest_shutdown
         ;;
     memcached)
         setup
         guest_cmd "memcached -p $MEMCACHED_PORT -u nobody &"
-        set +e
-        timeout $TIMEOUT $MCBENCH ${MC_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
-        set -e
+        time $MCBENCH ${MC_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
         collect
         guest_shutdown
         ;;
     nginx)
         setup
-        guest_cmd "nginx"
-        ab ${NGINX_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
+        guest_cmd "service nginx start"
+        time ab ${NGINX_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
         collect
         guest_shutdown
         ;;
     apache)
         setup
-        guest_cmd "httpd"
-        ab ${APACHE_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
+        guest_cmd "apache2ctl start"
+        time ab ${APACHE_BENCH_FLAGS[@]} | tee $BENCH_OUTPUT
         collect
         guest_shutdown
         ;;
