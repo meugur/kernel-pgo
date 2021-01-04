@@ -48,12 +48,12 @@ APACHE_BENCH_FLAGS=(
 )
 LEVELDB_BENCH_FLAGS=(
     '--db=/root/leveldbbench'
-    '--num=5800000'
+    '--num=6000000'
     '--benchmarks=fillseq,fillrandom,readseq,readrandom,deleteseq,deleterandom,stats'
 )
 ROCKSDB_BENCH_FLAGS=(
     '--db=/root/rocksdbbench'
-    '--num=5800000'
+    '--num=4500000'
     '--benchmarks=fillseq,fillrandom,readseq,readrandom,deleteseq,deleterandom,stats'
 )
 MYSQL_PREP_FLAGS=(
@@ -187,7 +187,7 @@ case "$BENCHMARK" in
         FLAGS=${LEVELDB_BENCH_FLAGS[@]}
         setup
         guest_cmd "mkdir -p /root/leveldbbench"
-        time_guest_cmd "./db_bench_leveldb $FLAGS" | tee $BENCH_OUTPUT
+        time_guest_cmd "./leveldb/build/db_bench $FLAGS" | tee $BENCH_OUTPUT
         collect
         guest_cmd "rm -rf /root/leveldbbench"
         guest_shutdown
@@ -196,7 +196,7 @@ case "$BENCHMARK" in
         FLAGS=${ROCKSDB_BENCH_FLAGS[@]}
         setup
         guest_cmd "mkdir -p /root/rocksdbbench"
-        time_guest_cmd "./db_bench_rocksdb $FLAGS" | tee $BENCH_OUTPUT
+        time_guest_cmd "./rocksdb/build/db_bench $FLAGS" | tee $BENCH_OUTPUT
         collect
         guest_cmd "rm -rf /root/rocksdbbench"
         guest_shutdown
