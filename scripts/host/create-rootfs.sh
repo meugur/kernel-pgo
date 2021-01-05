@@ -40,6 +40,9 @@ exit
 # Configurations
 sudo cp $BASEDIR/overlay/etc/redis.conf $MOUNT/etc/redis
 sudo cp $BASEDIR/overlay/etc/nginx.conf $MOUNT/etc/nginx
+sudo cp $BASEDIR/overlay/etc/mysqld.cnf $MOUNT/etc/mysql/mysql.conf.d
+sudo cp $BASEDIR/overlay/etc/pg_hba.conf $MOUNT/etc/postgresql/12/main
+sudo cp $BASEDIR/overlay/etc/postgresql.conf $MOUNT/etc/postgresql/12/main
 
 sudo umount $MOUNT/proc
 sudo umount $MOUNT/sys

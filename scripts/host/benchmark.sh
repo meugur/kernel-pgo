@@ -10,7 +10,7 @@ TIMEOUT=2m
 
 # Specific binaries
 MCBENCH=$(pwd)/mc-benchmark/mc-benchmark
-SYSBENCH_MYSQL=$(pwd)/sysbench-0.4.12.16/sysbench/sysbench
+SYSBENCH_MYSQL=/usr/bin/sysbench
 SYSBENCH_PGSQL=/usr/bin/sysbench
 
 REDIS_PORT=7369
@@ -57,24 +57,24 @@ ROCKSDB_BENCH_FLAGS=(
     '--benchmarks=fillseq,fillrandom,readseq,readrandom,deleteseq,deleterandom,stats'
 )
 MYSQL_PREP_FLAGS=(
-    '--test=oltp'
     '--db-driver=mysql'
-    '--report-interval=2'
-    '--oltp-table-size=10000000'
-    '--num-threads=4'
+    '--table_size=1000000'
+    '--tables=4'
+    '--threads=4'
     '--mysql-host=127.0.0.1'
     "--mysql-port=$MYSQL_PORT"
     '--mysql-db=sysbench'
     '--mysql-user=sysbench'
     '--mysql-password=password'
+    'oltp_read_write'
     'prepare'
 )
 MYSQL_RUN_FLAGS=(
-    '--test=oltp'
     '--db-driver=mysql'
-    '--report-interval=2'
-    '--oltp-table-size=10000000'
-    '--num-threads=16'
+    '--report-interval=10'
+    '--table_size=1000000'
+    '--tables=4'
+    '--threads=4'
     '--max-time=120'
     '--max-requests=0'
     '--mysql-host=127.0.0.1'
@@ -82,12 +82,13 @@ MYSQL_RUN_FLAGS=(
     '--mysql-db=sysbench'
     '--mysql-user=sysbench'
     '--mysql-password=password'
+    'oltp_read_write'
     'run'
 )
 PGSQL_PREP_FLAGS=(
     '--db-driver=pgsql'
-    '--table_size=10000000'
-    '--tables=1'
+    '--table_size=1000000'
+    '--tables=4'
     '--threads=4'
     '--pgsql-host=127.0.0.1'
     "--pgsql-port=$PGSQL_PORT"
@@ -99,10 +100,10 @@ PGSQL_PREP_FLAGS=(
 )
 PGSQL_RUN_FLAGS=(
     '--db-driver=pgsql'
-    '--report-interval=2'
-    '--table_size=10000000'
-    '--tables=1'
-    '--threads=16'
+    '--report-interval=10'
+    '--table_size=1000000'
+    '--tables=4'
+    '--threads=4'
     '--max-time=120'
     '--max-requests=0'
     '--pgsql-host=127.0.0.1'
@@ -205,42 +206,24 @@ case "$BENCHMARK" in
         case "$3" in
             prepare)
                 guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S50postgresql" "stop"
-                service "S97mysqld" "restart"
-                guest_cmd "sleep 5"
+                guest_cmd "service mysql restart"
                 guest_cmd "mysql -u root -e \"CREATE DATABASE sysbench;\""
-                guest_cmd "mysql -u root -e \"CREATE USER 'sysbench'@'10.0.2.2' IDENTIFIED BY 'password';\""
-                guest_cmd "mysql -u root -e \"GRANT ALL PRIVILEGES ON *.* TO 'sysbench'@'10.0.2.2' IDENTIFIED BY 'password';\""
+                guest_cmd "mysql -u root -e \"CREATE USER sysbench@'10.0.2.2' IDENTIFIED BY 'password';\""
+                guest_cmd "mysql -u root -e \"GRANT ALL ON sysbench.* TO sysbench@'10.0.2.2';\""
                 $SYSBENCH_MYSQL ${MYSQL_PREP_FLAGS[@]}
                 ;;
             run)
-                guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S50postgresql" "stop"
-                service "S97mysqld" "restart"
-                guest_cmd "sleep 5"
-                guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
-                guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
-                start_gcov
-                $SYSBENCH_MYSQL ${MYSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
+                setup
+                guest_cmd "service mysql restart"
+                time $SYSBENCH_MYSQL ${MYSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 collect
                 guest_shutdown
                 ;;
             drop)
                 guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S50postgresql" "stop"
-                service "S97mysqld" "restart"
-                guest_cmd "sleep 5"
+                guest_cmd "service mysql restart"
                 guest_cmd "mysql -u root -e \"DROP DATABASE sysbench;\""
-                guest_cmd "mysql -u root -e \"DROP USER 'sysbench'@'10.0.2.2';\""
+                guest_cmd "mysql -u root -e \"DROP USER sysbench@'10.0.2.2';\""
                 ;;
             *)
                 echo "MySQL usage: $0 $BENCHMARK {prepare|run|drop}"
@@ -252,46 +235,28 @@ case "$BENCHMARK" in
         case "$3" in
             prepare)
                 guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S97mysqld" "stop"
-                service "S50postgresql" "restart"
-                guest_cmd "sleep 5"
+                guest_cmd "service postgresql restart"
                 guest_cmd "psql -U postgres -c \"CREATE DATABASE sysbench;\""
                 guest_cmd "psql -U postgres -c \"CREATE USER sysbench WITH PASSWORD 'password';\""
                 guest_cmd "psql -U postgres -c \"GRANT ALL PRIVILEGES ON DATABASE sysbench TO sysbench;\""
                 $SYSBENCH_PGSQL ${PGSQL_PREP_FLAGS[@]}
                 ;;
             run)
-                guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S97mysqld" "stop"
-                service "S50postgresql" "restart"
-                guest_cmd "sleep 5"
-                guest_cmd "echo 0 | tee /proc/sys/kernel/randomize_va_space"
-                guest_cmd "echo 1 | tee /proc/sys/net/ipv4/tcp_tw_reuse"
-                start_gcov
-                $SYSBENCH_PGSQL ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
+                setup
+                guest_cmd "service postgresql restart"
+                time $SYSBENCH_PGSQL ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 collect
                 guest_shutdown
                 ;;
             drop)
                 guest_cmd "date"
-                service "S50redis" "stop"
-                service "S50nginx" "stop"
-                service "S50apache" "stop"
-                service "S97mysqld" "stop"
-                service "S50postgresql" "restart"
-                guest_cmd "sleep 5"
+                guest_cmd "service postgresql restart"
                 guest_cmd "psql -U postgres -c \"DROP DATABASE sysbench;\""
                 guest_cmd "psql -U postgres -c \"DROP USER sysbench;\""
                 ;;
             *)
                 echo "PostgreSQL usage: $0 $BENCHMARK {prepare|run|drop}"
-                exit 1
+                exit 2
                 ;;
         esac
         ;;

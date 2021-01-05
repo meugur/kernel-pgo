@@ -8,7 +8,7 @@ ROOT_FS_PATH=$(pwd)/images/ubuntu_base_20_04_1.img
 qemu-system-x86_64 \
     -kernel $KERNEL_PATH \
     -boot c \
-    -m 512 \
+    -m 2048 \
     -hda $ROOT_FS_PATH \
     -append 'root=/dev/sda rw console=ttyS0 nokaslr' \
     -display none \
