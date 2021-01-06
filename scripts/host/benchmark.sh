@@ -23,16 +23,16 @@ PGSQL_PORT=5432
 REDIS_BENCH_FLAGS=(
     '-h 127.0.0.1'
     "-p $REDIS_PORT"
-    '-n 150000'
-    '-c 15'
-    '-d 15'
+    '-n 160000'
+    '-c 16'
+    '-d 16'
 )
 MC_BENCH_FLAGS=(
     '-h 127.0.0.1'
     "-p $MEMCACHED_PORT"
-    '-n 1700000'
-    '-c 15'
-    '-d 15'
+    '-n 1600000'
+    '-c 16'
+    '-d 16'
 )
 NGINX_BENCH_FLAGS=(
     '-t 120'
@@ -244,7 +244,9 @@ case "$BENCHMARK" in
             run)
                 setup
                 guest_cmd "service postgresql restart"
+                set +e
                 time $SYSBENCH_PGSQL ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
+                set -e
                 collect
                 guest_shutdown
                 ;;
