@@ -2,7 +2,7 @@
 
 set -e
 
-NO_GCOV=0
+NO_GCOV=1
 
 BENCHMARK=$1
 BENCH_OUTPUT=${2:-temp.txt}
