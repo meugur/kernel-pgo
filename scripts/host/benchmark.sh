@@ -2,16 +2,14 @@
 
 set -e
 
-NO_GCOV=1
+GCOV=1
 
 BENCHMARK=$1
 BENCH_OUTPUT=${2:-temp.txt}
-TIMEOUT=2m
 
 # Specific binaries
 MCBENCH=$(pwd)/mc-benchmark/mc-benchmark
-SYSBENCH_MYSQL=/usr/bin/sysbench
-SYSBENCH_PGSQL=/usr/bin/sysbench
+SYSBENCH=/usr/bin/sysbench
 
 REDIS_PORT=7369
 MEMCACHED_PORT=7369
@@ -132,8 +130,8 @@ service() {
 }
 
 start_gcov() {
-    if [[ $NO_GCOV -eq 0 ]]; then
-        guest_cmd "echo 1 | tee /sys/kernel/debug/gcov/reset"
+    if [[ $GCOV -eq 1 ]]; then
+        guest_cmd "touch /sys/kernel/debug/gcov/reset"
     fi
 }
 
@@ -145,7 +143,7 @@ setup() {
 }
 
 collect() {
-    if [[ $NO_GCOV -eq 0 ]]; then
+    if [[ $GCOV -eq 1 ]]; then
         guest_cmd "cd / && time ./root/gather.sh $BENCHMARK.tar.gz"
     fi
 }
@@ -210,12 +208,12 @@ case "$BENCHMARK" in
                 guest_cmd "mysql -u root -e \"CREATE DATABASE sysbench;\""
                 guest_cmd "mysql -u root -e \"CREATE USER sysbench@'10.0.2.2' IDENTIFIED BY 'password';\""
                 guest_cmd "mysql -u root -e \"GRANT ALL ON sysbench.* TO sysbench@'10.0.2.2';\""
-                $SYSBENCH_MYSQL ${MYSQL_PREP_FLAGS[@]}
+                $SYSBENCH ${MYSQL_PREP_FLAGS[@]}
                 ;;
             run)
                 setup
                 guest_cmd "service mysql restart"
-                time $SYSBENCH_MYSQL ${MYSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
+                time $SYSBENCH ${MYSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 collect
                 guest_shutdown
                 ;;
@@ -239,13 +237,13 @@ case "$BENCHMARK" in
                 guest_cmd "psql -U postgres -c \"CREATE DATABASE sysbench;\""
                 guest_cmd "psql -U postgres -c \"CREATE USER sysbench WITH PASSWORD 'password';\""
                 guest_cmd "psql -U postgres -c \"GRANT ALL PRIVILEGES ON DATABASE sysbench TO sysbench;\""
-                $SYSBENCH_PGSQL ${PGSQL_PREP_FLAGS[@]}
+                $SYSBENCH ${PGSQL_PREP_FLAGS[@]}
                 ;;
             run)
                 setup
                 guest_cmd "service postgresql restart"
                 set +e
-                time $SYSBENCH_PGSQL ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
+                time $SYSBENCH ${PGSQL_RUN_FLAGS[@]} | tee $BENCH_OUTPUT
                 set -e
                 collect
                 guest_shutdown

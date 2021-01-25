@@ -4,7 +4,7 @@ BASEDIR="$(pwd)"
 
 mkdir -p images
 
-DISK=$BASEDIR/images/ubuntu_base_20_04_1.img
+DISK=$BASEDIR/images/ubuntu_base_20_04_1_kernel_5_3.img
 TAR=$BASEDIR/ubuntu-base-20.04.1-base-amd64.tar.gz
 MOUNT=/mnt/tmpfs
 
