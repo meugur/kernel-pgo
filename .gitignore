@@ -2,7 +2,7 @@ linux-*/
 linux-*.tar.xz
 buildroot/
 mc-benchmark/
-gcov-data/
+gcov-data*/
 mysql-*/
 mysql-*.tar.gz
 sysbench-*/
@@ -17,3 +17,4 @@ stats/
 __pycache__/
 ubuntu-*.tar.gz
 images/
+*.log
