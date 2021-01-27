@@ -2,15 +2,17 @@
 
 set -e
 
-APP=${1:-}
+LINUX=${1:-}
+APP=${2:-}
+COMPILE_LOG=${3:-}
 
-if [[ -z $APP ]]; then
-    echo "Usage: $0 {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}"
+if [[ -z $APP || -z $LINUX || -z $COMPILE_LOG ]]; then
+    echo "Usage: $0 linux-version {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql} compile.log"
     exit 1
 fi
 
-BUILD_DIR=/home/meugur/dev/eecs/eecs582/kernel-pgo/linux-5.3
-GCOV_DATA=/home/meugur/dev/eecs/eecs582/kernel-pgo/gcov-data-5-3/$APP
+BUILD_DIR="$(pwd)"/$LINUX
+GCOV_DATA="$(pwd)"/gcov-data/$APP
 
 make_path() {
     echo $1 | sed -r 's/[/]+/#/g'
@@ -22,11 +24,11 @@ for FILE in ${FILES[@]}; do
     FLAT=$(make_path $FILE)
     HEAD=${FLAT##*$APP}
     NEW="$(make_path $BUILD_DIR)$HEAD"
-    cp $FILE $GCOV_DATA/$NEW
+    cp $FILE $BUILD_DIR/$NEW
 done
 echo "Finished copying!"
 
-cd linux-5.3
+cd $LINUX
 
 echo "Cleaning build..."
 make clean
@@ -34,16 +36,16 @@ echo "Finished cleaning!"
 
 echo "Compiling kernel..."
 
-# FLAGS
+# Useful flags:
+#
 # -Wno-missing-profile
 # V=1
-make CC=/usr/bin/gcc-9 KCFLAGS="-fprofile-use=$GCOV_DATA -fprofile-correction -Wno-coverage-mismatch -Wno-error=coverage-mismatch" -j4 2>&1 | tee compile_$APP.log
-SUCCESS=$?
-
-if [[ $SUCCESS -eq 1 ]]; then
-    echo "Error!"
-else
-    echo "Finished!"
-fi
+# CC=/usr/bin/gcc-version
+#
+make \
+    KCFLAGS="-fprofile-use=$BUILD_DIR -fprofile-correction -Wno-coverage-mismatch -Wno-error=coverage-mismatch" \
+    -j4 \
+    2>&1 | tee ../$COMPILE_LOG
 
 find . -name "*.gcda" -exec rm {} \;
+

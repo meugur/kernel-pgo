@@ -1,15 +1,24 @@
 #!/bin/bash -e
 
-BASEDIR="$(pwd)"
+NEW_IMAGE=${1:-}
+ROOTFS_TAR=${2:-}
+
+if [[ -z $NEW_IMAGE || -z $ROOTFS_TAR ]]; then
+    echo "Usage: $0 name_of_new_disk.img path/to/rootfs.tar.gz"
+    exit 1
+fi
 
 mkdir -p images
 
-DISK=$BASEDIR/images/ubuntu_base_20_04_1_kernel_5_3.img
-TAR=$BASEDIR/ubuntu-base-20.04.1-base-amd64.tar.gz
+BASEDIR="$(pwd)"
+DISK=$BASEDIR/images/$NEW_IMAGE
+TAR=$ROOTFS_TAR
+
 MOUNT=/mnt/tmpfs
 
 # 16 GB
 dd if=/dev/zero of=$DISK bs=4096 count=4M
+
 mkfs.ext4 $DISK
 sudo mkdir -p $MOUNT
 sudo mount -o loop $DISK $MOUNT

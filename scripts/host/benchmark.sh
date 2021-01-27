@@ -2,10 +2,17 @@
 
 set -e
 
-GCOV=1
+GCOV=${GCOV:-0}
+
+echo "GCOV: $GCOV"
 
 BENCHMARK=$1
-BENCH_OUTPUT=${2:-temp.txt}
+BENCH_OUTPUT=${3:-$2}
+
+if [[ -z $BENCH_OUTPUT ]]; then
+    echo "Usage: $0 benchmark {options} path/to/output.log"
+    exit 1
+fi
 
 # Specific binaries
 MCBENCH=$(pwd)/mc-benchmark/mc-benchmark
@@ -201,7 +208,7 @@ case "$BENCHMARK" in
         guest_shutdown
         ;;
     mysql)
-        case "$3" in
+        case "$2" in
             prepare)
                 guest_cmd "date"
                 guest_cmd "service mysql restart"
@@ -230,7 +237,7 @@ case "$BENCHMARK" in
         esac
         ;;
     postgresql)
-        case "$3" in
+        case "$2" in
             prepare)
                 guest_cmd "date"
                 guest_cmd "service postgresql restart"
@@ -256,7 +263,7 @@ case "$BENCHMARK" in
                 ;;
             *)
                 echo "PostgreSQL usage: $0 $BENCHMARK {prepare|run|drop}"
-                exit 2
+                exit 1
                 ;;
         esac
         ;;

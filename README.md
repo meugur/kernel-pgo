@@ -14,18 +14,20 @@ https://www.man7.org/linux/man-pages/man1/gcov.1.html
 
 # Build Linux Kernel
 ## Download
-Download a Linux kernel 5.x version. For example:
+Download a Linux kernel 5.x version.
+
+### 5.9.6
 ```
 wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.9.6.tar.xz
 xz -cd linux-5.9.6.tar.xz | tar xvf -
 ```
 Make sure you have the requirements to compile a Linux kernel
 
-https://www.kernel.org/doc/html/latest/process/changes.html
+https://www.kernel.org/doc/html/v5.9/process/changes.html
 
 ## Configuration
 ```
-cd linux-5.9.6
+cd linux-dir
 make menuconfig
 ```
 Set the following:
@@ -46,11 +48,11 @@ CONFIG_E1000=y
 ## Compilation
 In the kernel directory:
 ```
-make -j8
+make CFLAGS_GCOV=-fprofile-generate -j8
 ```
 # Build rootfs
 
-## Ubuntu Base
+## Ubuntu Base 20.04
 Ubuntu Base is a minimal rootfs for use in the 
 creation of custom images for specific needs.
 
@@ -61,27 +63,27 @@ wget https://cdimage.ubuntu.com/cdimage/ubuntu-base/releases/20.04/release/ubunt
 
 ### Setup
 ```
-./scripts/host/create-rootfs.sh
+# Creates the disk as images/ubuntu_base_20_04_1.img
+./scripts/host/create-rootfs.sh images/ubuntu_base_20_04_1.img ubuntu_base_20_04_1-base-amd64.tar.gz
 ```
 
 # Profile collection
 ## Run QEMU
 Run the emulated system from the repository root:
 ```
-./scripts/host/run-emulator.sh
+./scripts/host/run-emulator.sh linux-5.9.6/vmlinux images/ubuntu_base_20_04_1.img
 ```
 ## Benchmarks
 Make sure that you have dependences for the benchmark you want to run on the host.
 Then, specify the application that you would like to collect data for:
 ```
-./scripts/host/benchmark.sh
-Usage: ./benchmark.sh {redis|memcached|nginx|apache|leveldb|rocksdb} stats.log
+GCOV=1 ./scripts/host/benchmark.sh {redis|memcached|apache|nginx|leveldb|rocksdb} output.log
 
-./scripts/host/benchmark.sh {mysql|postgresql} stats.log {prepare|run|drop}
+GCOV=1 ./scripts/host/benchmark.sh {mysql|postgresql} {prepare|run|drop} output.log
 ```
 If the benchmark is successful, run the following to get profile data:
 ```
-./scripts/host/collect-gcov.sh {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}
+./scripts/host/collect-gcov.sh linux-5.9.6 images/ubuntu_base_20_04_1.img benchmark
 ```
 This will mount the rootfs to the host system and copy the data from the guest
 to the host. There will be a `gcov-data` directory with the gcov data in 
@@ -120,4 +122,19 @@ Install latest sysbench
 Ubuntu
 ```
 apt install sysbench libpq-dev
+```
+
+# PGO
+## Kernel Setup
+### 5.9.6
+
+Work around breakages with kvm. Update `arch/x86/kvm/Makefile` on line 3 to:
+```
+ccflags-y += -Iarch/x86/kvm -fno-profile-use
+```
+
+## Compilation
+Specify which benchmark data you would like to re-compile the kernel with:
+```
+./scripts/host/kernel-pgo.sh linux-5.9.6 benchmark compile_output.log
 ```

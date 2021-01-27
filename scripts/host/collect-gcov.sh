@@ -1,15 +1,21 @@
 #!/bin/bash -e
 
-APP=$1
+LINUX=${1:-}
+DISK=${2:-}
+APP=${3:-}
+
+GCOV_BIN=/usr/bin/gcov
+
+if [[ -z $APP || -z $LINUX || -z $DISK ]]; then
+    echo "Usage: $0 linux-version path/to/disk.img {redis|memcached|nginx|apache|leveldb|rocksdb|mysql|postgresql}"
+    exit 1
+fi
 
 MOUNTDIR=/mnt/tmpgcovfs
 BASEDIR=$(pwd)
-GCOV_BIN=/usr/bin/gcov-9
-LINUXDIR=$BASEDIR/linux-5.3
-OUTPUTDIR=$BASEDIR/gcov-data-5-3
+LINUXDIR=$BASEDIR/$LINUX
+OUTPUTDIR=$BASEDIR/gcov-data
 APPDIR=$OUTPUTDIR/$APP
-
-DISK=$BASEDIR/images/ubuntu_base_20_04_1_kernel_5_3.img
 
 APPTAR=$APP.tar.gz
 FINALTAR=$APP-profile.tar.gz
@@ -50,6 +56,7 @@ for FILE in "${FILES[@]}"; do
 
     # Create and unzip the json summary
     $GCOV_BIN -a -b -i -o $APPDIR/$FILEDIR $SOURCE > /dev/null
+
     mv $OUTPUTGZ $APPDIR/$FILEDIR
     cd $APPDIR/$FILEDIR
     gunzip $OUTPUTGZ
